@@ -1,6 +1,17 @@
 export type Status = "Feito" | "Pendente" | "N/A";
 export type Traducao = "Sim" | "Não" | "Talvez";
 export type Secao = "BRASIL" | "ESPANHA";
+export type Who = "jonathan" | "esther";
+export type AttachmentOwner = Who | "ambos";
+
+export interface Attachment {
+  id: string;
+  name: string;
+  mime: string;
+  dataUrl: string;
+  who: AttachmentOwner;
+}
+
 export interface Item {
   id: string;
   secao: Secao;
@@ -9,6 +20,7 @@ export interface Item {
   traducao: Traducao;
   jonathan: Status;
   esther: Status;
+  attachments?: Attachment[];
 }
 
 const raw: [Secao, string, string, Traducao, Status, Status][] = [
@@ -48,8 +60,35 @@ export const initialItems: Item[] = raw.map(([secao, documento, obs, traducao, j
   id: `d${i}`, secao, documento, obs, traducao, jonathan, esther,
 }));
 
-export function progress(items: Item[], who: "jonathan" | "esther") {
+export function progress(items: Item[], who: Who) {
   const done = items.filter((i) => i[who] === "Feito").length;
   const total = items.filter((i) => i[who] !== "N/A").length;
   return { done, total, pct: total ? done / total : 0 };
+}
+
+export function attach(item: Item, atts: Attachment[]): Item {
+  return { ...item, attachments: [...(item.attachments ?? []), ...atts] };
+}
+
+export function detach(item: Item, attId: string): Item {
+  return { ...item, attachments: (item.attachments ?? []).filter((a) => a.id !== attId) };
+}
+
+export function setAttachmentOwner(item: Item, attId: string, who: AttachmentOwner): Item {
+  return {
+    ...item,
+    attachments: (item.attachments ?? []).map((a) => (a.id === attId ? { ...a, who } : a)),
+  };
+}
+
+const ownerWeight: Record<AttachmentOwner, number> = { ambos: 0, jonathan: 1, esther: 2 };
+
+export function sortAttachments(atts: Attachment[]): Attachment[] {
+  return [...atts].sort((a, b) => ownerWeight[a.who] - ownerWeight[b.who]);
+}
+
+export function sumAttachments(items: Item[]): Record<AttachmentOwner, number> {
+  const sum: Record<AttachmentOwner, number> = { jonathan: 0, esther: 0, ambos: 0 };
+  for (const i of items) for (const a of i.attachments ?? []) sum[a.who]++;
+  return sum;
 }
