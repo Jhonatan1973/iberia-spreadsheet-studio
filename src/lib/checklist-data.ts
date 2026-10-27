@@ -8,8 +8,29 @@ export interface Attachment {
   id: string;
   name: string;
   mime: string;
-  dataUrl: string;
   who: AttachmentOwner;
+  /** Modo local: arquivo guardado no próprio navegador. */
+  dataUrl?: string;
+  /** Modo nuvem: caminho do arquivo no bucket "anexos". */
+  path?: string;
+}
+
+/** Nomes exibidos para cada pessoa. As chaves internas continuam "jonathan" e "esther". */
+export type Names = Record<Who, string>;
+export const DEFAULT_NAMES: Names = { jonathan: "Jhonatan", esther: "Ester" };
+export const WHOS: Who[] = ["jonathan", "esther"];
+
+export function normalizeNames(value: unknown): Names {
+  const v = (value ?? {}) as Partial<Record<Who, unknown>>;
+  const pick = (w: Who) => {
+    const n = typeof v[w] === "string" ? (v[w] as string).trim() : "";
+    return n ? n.slice(0, 40) : DEFAULT_NAMES[w];
+  };
+  return { jonathan: pick("jonathan"), esther: pick("esther") };
+}
+
+export function ownerLabel(names: Names, who: AttachmentOwner): string {
+  return who === "ambos" ? "Dos dois" : names[who];
 }
 
 export interface Item {
@@ -25,40 +46,181 @@ export interface Item {
 
 const raw: [Secao, string, string, Traducao, Status, Status][] = [
   ["BRASIL", "Passaporte", "Polícia Federal", "Não", "Pendente", "Pendente"],
-  ["BRASIL", "Certificado militar (dispensa ou reservista)", "Exigido p/ passaporte (homens de 19 a 45 anos)", "Não", "Feito", "N/A"],
+  [
+    "BRASIL",
+    "Certificado militar (dispensa ou reservista)",
+    "Exigido p/ passaporte (homens de 19 a 45 anos)",
+    "Não",
+    "Feito",
+    "N/A",
+  ],
   ["BRASIL", "Quitação eleitoral", "TSE / app e-Título", "Não", "Pendente", "Pendente"],
-  ["BRASIL", "ETIAS (se já estiver em vigor)", "Autorização online da União Europeia – confirmar", "Não", "Pendente", "Pendente"],
-  ["BRASIL", "Passagem de volta ou saída do Schengen", "Companhia aérea", "Não", "Pendente", "Pendente"],
-  ["BRASIL", "Comprovante de hospedagem", "Reserva ou carta de invitación do anfitrião", "Não", "Pendente", "Pendente"],
-  ["BRASIL", "Comprovante de dinheiro", "Extratos / cartões (~€120 por dia – confirmar valor)", "Não", "Pendente", "Pendente"],
-  ["BRASIL", "Seguro viagem", "Mín. €30.000, todo o Schengen – peça a apólice em inglês ou espanhol", "Não", "Pendente", "Pendente"],
-  ["BRASIL", "Antecedentes criminais (apostilado)", "Polícia Federal + cartório", "Sim", "Pendente", "Pendente"],
-  ["BRASIL", "Certidão de nascimento inteiro teor (apostilada)", "Cartório", "Sim", "Pendente", "Pendente"],
-  ["BRASIL", "Certidão de casamento ou escritura de união estável (apostilada)", "Cartório – necessária para serem reconhecidos como casal", "Sim", "Pendente", "Pendente"],
-  ["BRASIL", "Diploma (apostilado)", "Instituição de ensino + cartório", "Sim", "Pendente", "Pendente"],
-  ["BRASIL", "Histórico escolar (apostilado)", "Instituição de ensino + cartório", "Sim", "Pendente", "Pendente"],
-  ["BRASIL", "Comprovantes de experiência profissional", "Carteira digital, contratos, cartas", "Talvez", "Pendente", "Pendente"],
+  [
+    "BRASIL",
+    "ETIAS (se já estiver em vigor)",
+    "Autorização online da União Europeia – confirmar",
+    "Não",
+    "Pendente",
+    "Pendente",
+  ],
+  [
+    "BRASIL",
+    "Passagem de volta ou saída do Schengen",
+    "Companhia aérea",
+    "Não",
+    "Pendente",
+    "Pendente",
+  ],
+  [
+    "BRASIL",
+    "Comprovante de hospedagem",
+    "Reserva ou carta de invitación do anfitrião",
+    "Não",
+    "Pendente",
+    "Pendente",
+  ],
+  [
+    "BRASIL",
+    "Comprovante de dinheiro",
+    "Extratos / cartões (~€120 por dia – confirmar valor)",
+    "Não",
+    "Pendente",
+    "Pendente",
+  ],
+  [
+    "BRASIL",
+    "Seguro viagem",
+    "Mín. €30.000, todo o Schengen – peça a apólice em inglês ou espanhol",
+    "Não",
+    "Pendente",
+    "Pendente",
+  ],
+  [
+    "BRASIL",
+    "Antecedentes criminais (apostilado)",
+    "Polícia Federal + cartório",
+    "Sim",
+    "Pendente",
+    "Pendente",
+  ],
+  [
+    "BRASIL",
+    "Certidão de nascimento inteiro teor (apostilada)",
+    "Cartório",
+    "Sim",
+    "Pendente",
+    "Pendente",
+  ],
+  [
+    "BRASIL",
+    "Certidão de casamento ou escritura de união estável (apostilada)",
+    "Cartório – necessária para serem reconhecidos como casal",
+    "Sim",
+    "Pendente",
+    "Pendente",
+  ],
+  [
+    "BRASIL",
+    "Diploma (apostilado)",
+    "Instituição de ensino + cartório",
+    "Sim",
+    "Pendente",
+    "Pendente",
+  ],
+  [
+    "BRASIL",
+    "Histórico escolar (apostilado)",
+    "Instituição de ensino + cartório",
+    "Sim",
+    "Pendente",
+    "Pendente",
+  ],
+  [
+    "BRASIL",
+    "Comprovantes de experiência profissional",
+    "Carteira digital, contratos, cartas",
+    "Talvez",
+    "Pendente",
+    "Pendente",
+  ],
   ["BRASIL", "Extrato do CNIS", "Meu INSS", "Não", "Pendente", "Pendente"],
   ["BRASIL", "CNH", "Detran", "Talvez", "Pendente", "Pendente"],
   ["BRASIL", "Permissão Internacional para Dirigir (PID)", "Detran", "Não", "Pendente", "Pendente"],
-  ["BRASIL", "Receitas e laudos médicos", "Se usar remédio contínuo – tradução simples basta", "Não", "Pendente", "Pendente"],
-  ["BRASIL", "Saída Definitiva do País", "Receita Federal – se a mudança for de vez", "Não", "Pendente", "Pendente"],
+  [
+    "BRASIL",
+    "Receitas e laudos médicos",
+    "Se usar remédio contínuo – tradução simples basta",
+    "Não",
+    "Pendente",
+    "Pendente",
+  ],
+  [
+    "BRASIL",
+    "Saída Definitiva do País",
+    "Receita Federal – se a mudança for de vez",
+    "Não",
+    "Pendente",
+    "Pendente",
+  ],
   ["BRASIL", "Procuração para alguém no Brasil", "Cartório", "Não", "Pendente", "Pendente"],
-  ["ESPANHA", "Empadronamiento", "Prefeitura (Ayuntamiento) – fazer logo", "Não", "Pendente", "Pendente"],
-  ["ESPANHA", "Autorização de residência e trabalho", "Visto, arraigo ou outra via", "Não", "Pendente", "Pendente"],
+  [
+    "ESPANHA",
+    "Empadronamiento",
+    "Prefeitura (Ayuntamiento) – fazer logo",
+    "Não",
+    "Pendente",
+    "Pendente",
+  ],
+  [
+    "ESPANHA",
+    "Autorização de residência e trabalho",
+    "Visto, arraigo ou outra via",
+    "Não",
+    "Pendente",
+    "Pendente",
+  ],
   ["ESPANHA", "NIE / TIE", "Polícia – após a autorização", "Não", "Pendente", "Pendente"],
   ["ESPANHA", "Número da Seguridad Social", "Seguridad Social", "Não", "Pendente", "Pendente"],
   ["ESPANHA", "Tarjeta sanitaria", "Centro de saúde", "Não", "Pendente", "Pendente"],
   ["ESPANHA", "Conta bancária", "Banco", "Não", "Pendente", "Pendente"],
-  ["ESPANHA", "Cl@ve ou certificado digital", "Para serviços online do governo", "Não", "Pendente", "Pendente"],
-  ["ESPANHA", "Homologação do diploma", "Ministério espanhol – usa o diploma e histórico traduzidos", "Não", "Pendente", "Pendente"],
-  ["ESPANHA", "Troca da CNH pela carteira espanhola", "DGT – após a residência", "Não", "Pendente", "Pendente"],
+  [
+    "ESPANHA",
+    "Cl@ve ou certificado digital",
+    "Para serviços online do governo",
+    "Não",
+    "Pendente",
+    "Pendente",
+  ],
+  [
+    "ESPANHA",
+    "Homologação do diploma",
+    "Ministério espanhol – usa o diploma e histórico traduzidos",
+    "Não",
+    "Pendente",
+    "Pendente",
+  ],
+  [
+    "ESPANHA",
+    "Troca da CNH pela carteira espanhola",
+    "DGT – após a residência",
+    "Não",
+    "Pendente",
+    "Pendente",
+  ],
   ["ESPANHA", "Matrícula consular", "Consulado do Brasil", "Não", "Pendente", "Pendente"],
 ];
 
-export const initialItems: Item[] = raw.map(([secao, documento, obs, traducao, jonathan, esther], i) => ({
-  id: `d${i}`, secao, documento, obs, traducao, jonathan, esther,
-}));
+export const initialItems: Item[] = raw.map(
+  ([secao, documento, obs, traducao, jonathan, esther], i) => ({
+    id: `d${i}`,
+    secao,
+    documento,
+    obs,
+    traducao,
+    jonathan,
+    esther,
+  }),
+);
 
 export function progress(items: Item[], who: Who) {
   const done = items.filter((i) => i[who] === "Feito").length;
@@ -81,10 +243,21 @@ export function setAttachmentOwner(item: Item, attId: string, who: AttachmentOwn
   };
 }
 
+/** Junta as linhas de anexos (vindas do banco) dentro de cada item. */
+export function withAttachments(items: Item[], atts: (Attachment & { itemId: string })[]): Item[] {
+  const byItem = new Map<string, Attachment[]>();
+  for (const { itemId, ...a } of atts) {
+    const list = byItem.get(itemId) ?? [];
+    list.push(a);
+    byItem.set(itemId, list);
+  }
+  return items.map((i) => ({ ...i, attachments: byItem.get(i.id) ?? [] }));
+}
+
 const ownerWeight: Record<AttachmentOwner, number> = { ambos: 0, jonathan: 1, esther: 2 };
 
 export function sortAttachments(atts: Attachment[]): Attachment[] {
-  return [...atts].sort((a, b) => ownerWeight[a.who] - ownerWeight[b.who]);
+  return [...atts].sort((a, b) => (ownerWeight[a.who] ?? 0) - (ownerWeight[b.who] ?? 0));
 }
 
 export function sumAttachments(items: Item[]): Record<AttachmentOwner, number> {

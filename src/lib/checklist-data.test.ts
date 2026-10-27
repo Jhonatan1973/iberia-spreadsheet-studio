@@ -7,6 +7,10 @@ import {
   setAttachmentOwner,
   sortAttachments,
   sumAttachments,
+  normalizeNames,
+  ownerLabel,
+  withAttachments,
+  DEFAULT_NAMES,
   type Attachment,
   type Item,
 } from "./checklist-data";
@@ -62,5 +66,33 @@ describe("attachments", () => {
       item([att("c", "esther"), att("d", "jonathan")]),
     ];
     expect(sumAttachments(items)).toEqual({ jonathan: 2, esther: 1, ambos: 1 });
+  });
+});
+
+describe("names", () => {
+  it("defaults to Jhonatan and Ester", () => {
+    expect(DEFAULT_NAMES).toEqual({ jonathan: "Jhonatan", esther: "Ester" });
+    expect(normalizeNames(undefined)).toEqual(DEFAULT_NAMES);
+  });
+  it("keeps custom names and falls back on blanks", () => {
+    expect(normalizeNames({ jonathan: "  João ", esther: "" })).toEqual({
+      jonathan: "João",
+      esther: "Ester",
+    });
+  });
+  it("ownerLabel uses the chosen names", () => {
+    const names = { jonathan: "Jhonatan", esther: "Ester" };
+    expect(ownerLabel(names, "esther")).toBe("Ester");
+    expect(ownerLabel(names, "ambos")).toBe("Dos dois");
+  });
+});
+
+describe("withAttachments", () => {
+  it("groups attachment rows into their items", () => {
+    const items = initialItems.slice(0, 2);
+    const merged = withAttachments(items, [{ ...att("a", "esther"), itemId: items[1].id }]);
+    expect(merged[0].attachments).toEqual([]);
+    expect(merged[1].attachments?.map((a) => a.id)).toEqual(["a"]);
+    expect(merged[1].attachments?.[0]).not.toHaveProperty("itemId");
   });
 });
