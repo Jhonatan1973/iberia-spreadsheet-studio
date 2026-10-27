@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import hero from "@/assets/espanha-hero.jpg";
 import { initialItems, progress, type Item, type Status, type Traducao, type Secao } from "@/lib/checklist-data";
 
 export const Route = createFileRoute("/")({
@@ -71,28 +72,38 @@ function Index() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="relative overflow-hidden bg-hero text-primary-foreground">
-        <div className="absolute inset-0 tile-pattern opacity-40" />
-        <div className="relative mx-auto max-w-6xl px-5 pb-24 pt-10 md:pt-14">
-          <p className="text-sm uppercase tracking-[0.3em] text-gold">¡Vamos a España!</p>
-          <h1 className="mt-2 text-4xl font-extrabold leading-tight md:text-6xl">
-            Checklist de documentos <span className="italic text-gold">Mudança para a Espanha</span>
+      <header className="relative overflow-hidden text-primary-foreground">
+        <img src={hero} alt="Plaza de España e Sagrada Família ao pôr do sol" width={1920} height={800}
+          className="absolute inset-0 h-full w-full object-cover" />
+        <div className="absolute inset-0 bg-hero-overlay" />
+        <div className="relative mx-auto max-w-6xl px-4 pb-24 pt-8 sm:px-6 md:pb-32 md:pt-16">
+          <div className="flex items-center gap-2">
+            <span className="flag-es h-4 w-6 rounded-sm shadow" />
+            <p className="text-xs uppercase tracking-[0.3em] text-gold sm:text-sm">¡Vamos a España!</p>
+          </div>
+          <h1 className="mt-3 text-3xl font-extrabold leading-tight drop-shadow sm:text-5xl md:text-6xl">
+            Checklist de documentos<br /><span className="italic text-gold">rumo à Espanha</span>
           </h1>
-          <p className="mt-4 max-w-2xl text-primary-foreground/85">
-            Toque no status para alternar entre Pendente, Feito e N/A. Ordem: tire o documento → apostile → traduza.
+          <p className="mt-4 max-w-xl text-sm text-primary-foreground/90 sm:text-base">
+            Toque no status para alternar entre Pendente, Feito e N/A.
           </p>
+          <div className="mt-5 flex flex-wrap gap-2 text-xs sm:text-sm">
+            {["1. Tire o documento", "2. Apostile", "3. Traduza"].map((t) => (
+              <span key={t} className="rounded-full border border-gold/60 bg-foreground/30 px-3 py-1 backdrop-blur">{t}</span>
+            ))}
+          </div>
         </div>
-        <div className="h-3 bg-gold" />
+        <div className="flag-stripe relative h-2" />
       </header>
 
-      <main className="relative mx-auto -mt-16 max-w-6xl px-5 pb-16">
-        <div className="grid gap-4 md:grid-cols-2">
+      <main className="relative mx-auto -mt-16 max-w-6xl px-4 pb-16 sm:px-6">
+        <div className="grid gap-4 sm:grid-cols-2">
           {(["jonathan", "esther"] as const).map((w) => {
             const p = progress(items, w);
             return (
               <div key={w} className="rounded-2xl border bg-card p-5 shadow-card">
                 <div className="flex items-baseline justify-between">
-                  <h2 className="text-2xl font-semibold capitalize">{w}</h2>
+                  <h2 className="text-2xl font-semibold capitalize">{w === "jonathan" ? "💃🏻 " : ""}{w === "esther" ? "🌹 " : ""}{w}</h2>
                   <span className="text-sm text-muted-foreground">{p.done} de {p.total}</span>
                 </div>
                 <div className="mt-3 h-3 overflow-hidden rounded-full bg-muted">
@@ -104,13 +115,13 @@ function Index() {
           })}
         </div>
 
-        <div className="mt-8 flex flex-col gap-3 md:flex-row md:items-center">
+        <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:flex lg:items-center">
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar documento…"
-            className="h-11 flex-1 rounded-xl border bg-card px-4 outline-none focus:ring-2 focus:ring-ring" />
-          <div className="flex rounded-xl border bg-card p-1">
+            className="h-11 rounded-xl sm:col-span-2 lg:flex-1 border bg-card px-4 outline-none focus:ring-2 focus:ring-ring" />
+          <div className="flex rounded-xl border bg-card p-1 sm:col-span-2 lg:col-auto">
             {(["todos", "pendentes", "feitos"] as const).map((f) => (
               <button key={f} onClick={() => setFiltro(f)}
-                className={`rounded-lg px-3 py-1.5 text-sm capitalize ${filtro === f ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>{f}</button>
+                className={`flex-1 rounded-lg px-3 py-1.5 text-sm capitalize ${filtro === f ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>{f}</button>
             ))}
           </div>
           <button onClick={() => setEditing({ id: crypto.randomUUID(), secao: "BRASIL", documento: "", obs: "", traducao: "Não", jonathan: "Pendente", esther: "Pendente" })}
@@ -125,27 +136,27 @@ function Index() {
             <section key={sec} className="mt-10">
               <h2 className="mb-4 flex items-center gap-3 text-2xl font-bold">
                 <span className="text-3xl">{sec === "BRASIL" ? "🇧🇷" : "🇪🇸"}</span>
-                {sec === "BRASIL" ? "No Brasil" : "En España"}
+                <span>{sec === "BRASIL" ? "No Brasil" : "En España"}<span className="block text-sm font-normal italic text-muted-foreground">{sec === "BRASIL" ? "Antes de embarcar" : "Al llegar — bienvenidos"}</span></span>
                 <span className="text-sm font-normal text-muted-foreground">({list.length})</span>
               </h2>
               <div className="grid gap-3">
                 {list.map((i) => (
-                  <div key={i.id} className="group grid gap-3 rounded-2xl border bg-card p-4 transition hover:shadow-card md:grid-cols-[1fr_auto_auto_auto] md:items-center">
-                    <button onClick={() => setEditing(i)} className="text-left">
+                  <div key={i.id} className="group grid grid-cols-2 gap-3 rounded-2xl border border-l-4 border-l-primary bg-card p-4 transition hover:-translate-y-0.5 hover:shadow-card md:grid-cols-[1fr_auto_auto_auto] md:items-center">
+                    <button onClick={() => setEditing(i)} className="col-span-2 text-left md:col-span-1">
                       <p className="font-medium">{i.documento}</p>
                       <p className="text-sm text-muted-foreground">{i.obs}</p>
                       <span className={`mt-2 inline-block rounded-full px-2 py-0.5 text-xs ${tradCls[i.traducao]}`}>Tradução: {i.traducao}</span>
                     </button>
                     {(["jonathan", "esther"] as const).map((w) => (
-                      <div key={w} className="flex items-center gap-2 md:flex-col md:items-center md:gap-1">
-                        <span className="w-20 text-xs uppercase tracking-wide text-muted-foreground md:w-auto">{w}</span>
+                      <div key={w} className="flex flex-col gap-1 md:items-center">
+                        <span className="text-xs uppercase tracking-wide text-muted-foreground">{w}</span>
                         <button onClick={() => update(i.id, { [w]: cycle(i[w]) })}
                           className={`min-w-24 rounded-full border px-3 py-1 text-sm font-medium transition ${statusCls[i[w]]}`}>
                           {i[w] === "Feito" ? "✓ Feito" : i[w]}
                         </button>
                       </div>
                     ))}
-                    <button onClick={() => setEditing(i)} className="justify-self-end text-sm text-muted-foreground hover:text-primary">Editar</button>
+                    <button onClick={() => setEditing(i)} className="col-span-2 justify-self-end text-sm md:col-span-1 text-muted-foreground hover:text-primary">Editar</button>
                   </div>
                 ))}
               </div>
@@ -153,7 +164,8 @@ function Index() {
           );
         })}
 
-        <p className="mt-12 rounded-2xl border border-gold bg-gold/15 p-4 text-sm text-muted-foreground">
+        <footer className="mt-12 text-center"><p className="font-display text-2xl italic text-primary">¡Buena suerte y hasta pronto! 🇪🇸</p></footer>
+        <p className="mt-6 rounded-2xl border border-gold bg-gold/15 p-4 text-sm text-muted-foreground">
           Lista de apoio, não é orientação jurídica. Confirmem no Consulado da Espanha (exteriores.gob.es) e, se possível, com um advogado de extranjería.
         </p>
       </main>
