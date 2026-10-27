@@ -103,7 +103,7 @@ function Index() {
             return (
               <div key={w} className="rounded-2xl border bg-card p-5 shadow-card">
                 <div className="flex items-baseline justify-between">
-                  <h2 className="text-2xl font-semibold capitalize">{w === "jonathan" ? "💃🏻 " : ""}{w === "esther" ? "🌹 " : ""}{w}</h2>
+                  <h2 className="text-2xl font-semibold capitalize">{w === "jonathan" ? "🕺 " : ""}{w === "esther" ? "🌹 " : ""}{w}</h2>
                   <span className="text-sm text-muted-foreground">{p.done} de {p.total}</span>
                 </div>
                 <div className="mt-3 h-3 overflow-hidden rounded-full bg-muted">
